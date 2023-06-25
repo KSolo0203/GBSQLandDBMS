@@ -1,70 +1,89 @@
 /* Задача 1.
-Создайте таблицу с мобильными телефонами (mobile_phones),
-используя графический интерфейс. Заполните БД данными.
+Используя операторы языка SQL, создайте табличку “sales”. Заполните ее данными.
 */
 
--- создаем таблицу
-CREATE TABLE 'goods_schema'.'mobile_phones' (
-    'id' INT NOT NULL AUTO_INCREMENT,
-    'testcol' VARCHAR(255) NOT NULL,
-    PRIMARY KEY ('id'),
-    UNIQUE INDEX 'id_UNIQUE' ('id' ASC) VISIBLE);
+-- создаем и заполняем таблицу
+DROP DATABASE IF EXISTS homework2;
+CREATE DATABASE homework2;
+USE homework2;
 
--- меняем таблицу
-ALTER TABLE 'goods_schema'.'mobile_phones' (
-    DROP COLUMN 'testcol',
-    ADD COLUMN 'product_name' VARCHAR(255) NOT NULL AFTER 'id',
-    ADD COLUMN 'manufacturer' VARCHAR(255) NOT NULL AFTER 'product_name',
-    ADD COLUMN 'product_count' INT NOT NULL AFTER 'manufacturer',
-    ADD COLUMN 'price' INT NOT NULL AFTER 'product_count');
+DROP TABLE IF EXISTS sales;
+CREATE TABLE sales (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+    order_date DATE NOT NULL,
+    count_product INT NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE INDEX id_UNIQUE (id ASC) VISIBLE);
 
--- заполняем таблицу
-INSERT INTO 'goods_schema'.'mobile_phones' ('product_name', 'manufacturer', 'product_count', 'price') VALUES ('iPhone X', 'Apple', '3', '76000')
-INSERT INTO 'goods_schema'.'mobile_phones' ('product_name', 'manufacturer', 'product_count', 'price') VALUES ('iPhone', '8', 'Apple', '2', '51000')
-INSERT INTO 'goods_schema'.'mobile_phones' ('product_name', 'manufacturer', 'product_count', 'price') VALUES ('Galaxy', 'S9', 'Samsung', '2', '56000')
-INSERT INTO 'goods_schema'.'mobile_phones' ('product_name', 'manufacturer', 'product_count', 'price') VALUES ('Galaxy', 'S8', 'Samsung', '1', '41000')
-INSERT INTO 'goods_schema'.'mobile_phones' ('product_name', 'manufacturer', 'product_count', 'price') VALUES ('P20 Pro', 'Huawei', '5', '36000');
+INSERT INTO sales (order_date, count_product) VALUES ('2022-01-01', '156');
+INSERT INTO sales (order_date, count_product) VALUES ('2022-01-02', '180');
+INSERT INTO sales (order_date, count_product) VALUES ('2022-01-03', '21');
+INSERT INTO sales (order_date, count_product) VALUES ('2022-01-04', '124');
+INSERT INTO sales (order_date, count_product) VALUES ('2022-01-05', '341');
 
 /* Задача 2.
-Выведите название, производителя и цену для товаров, количество которых превышает 2.
+Для данных таблицы “sales” укажите тип заказа в зависимости от кол-ва:
+меньше 100 - Маленький заказ;
+от 100 до 300 - Средний заказ;
+больше 300 - Большой заказ.
 */
 
 -- Запрос:
-SELECT product_name, manufacturer, price
-FROM goods_schema.mobile_phones
-WHERE product_count > 2
+USE homework2;
+
+SELECT
+    id as 'ID заказа',
+    CASE
+        WHEN count_product < 100 THEN 'Маленький заказ'
+        WHEN count_product BETWEEN 100 AND 300 THEN 'Средний заказ'
+        WHEN count_product > 300 THEN 'Большой заказ'
+    END AS 'Тип заказа'
+FROM sales;
 
 /* Задача 3.
-Выведите весь ассортимент товаров марки “Samsung”.
+Создайте таблицу “orders”, заполните ее значениями. Выберите все заказы.
+В зависимости от поля order_status выведите столбец full_order_status:
+OPEN – «Order is in open state»;
+CLOSED - «Order is closed»;
+CANCELLED - «Order is cancelled».
 */
+
+-- создаем и заполняем таблицу
+USE homework2;
+
+DROP TABLE IF EXISTS orders;
+CREATE TABLE orders (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+    employee_id VARCHAR(40) NOT NULL,
+    amount DECIMAL(6,2) NOT NULL,
+    order_status TINYINT UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE INDEX id_UNIQUE (id ASC) VISIBLE);
+
+INSERT INTO orders (employee_id, amount, order_status) VALUES ('e03', '15', '1');
+INSERT INTO orders (employee_id, amount, order_status) VALUES ('e01', '25.5', '1');
+INSERT INTO orders (employee_id, amount, order_status) VALUES ('e05', '100.7', '2');
+INSERT INTO orders (employee_id, amount, order_status) VALUES ('e02', '22.18', '1');
+INSERT INTO orders (employee_id, amount, order_status) VALUES ('e04', '9.5', '3');
 
 -- Запрос:
-SELECT *
-FROM goods_schema.mobile_phones
-WHERE manufacturer = 'Samsung'
+USE homework2;
+
+SELECT
+    id, employee_id, amount,
+    CASE order_status
+        WHEN 1 THEN 'OPEN'
+        WHEN 2 THEN 'CLOSED'
+        WHEN 3 THEN 'CANCELLED'
+    END AS 'order_status'
+FROM orders;
 
 /* Задача 4.
-С помощью регулярных выражений найти:
-	4.1. Товары, в которых есть упоминание "Iphone".
-	4.2. Товары, в которых есть упоминание "Samsung".
-	4.3.  Товары, в которых есть ЦИФРЫ.
-	4.4.  Товары, в которых есть ЦИФРА "8".
+Чем NULL отличается от 0?
 */
 
--- Запросы:
-SELECT *
-FROM goods_schema.mobile_phones
-WHERE UPPER(product_name) LIKE UPPER('%iphone%')
-
-SELECT *
-FROM goods_schema.mobile_phones
-WHERE LOWER(manufacturer) LIKE LOWER('%samsung%')
-
-SELECT *
-FROM goods_schema.mobile_phones
-WHERE product_name NOT LIKE '%[^0-9]%'
-
-SELECT *
-FROM goods_schema.mobile_phones
-WHERE product_name LIKE '%8%'
-
+-- 0 это целочисленное значение значение, хранящее в ячейке с типом INT, BIGINT и иже с ними.
+-- NULL же это отсутствие значения в ячейке, т.е. либо оно не было присвоено, либо оно было сброшено.
+-- Интересно было бы узнать ваше мнение по поводу того, что среди гуру СУБД бытует мнение,
+-- будто бы ячейки с NULL это признак дурного дизайна модели.
+-- Есть ли ситуации, когда от NULL невозможно избавиться полностью?
