@@ -1,89 +1,54 @@
-/* Задача 1.
-Используя операторы языка SQL, создайте табличку “sales”. Заполните ее данными.
+/* Задачи 1-6.
+1. Отсортируйте данные по полю заработная плата (salary) в порядке: убывания; возрастания
+2. Выведите 5 максимальных заработных плат (salary)
+3. Посчитайте суммарную зарплату (salary) по каждой специальности (роst)
+4. Найдите кол-во сотрудников с специальностью (post) «Рабочий» в возрасте от 24 до 49 лет включительно.
+5. Найдите количество специальностей
+6. Выведите специальности, у которых средний возраст сотрудников меньше 30 лет
 */
+USE lesson_3;
 
--- создаем и заполняем таблицу
-DROP DATABASE IF EXISTS homework2;
-CREATE DATABASE homework2;
-USE homework2;
+-- Пункт 1.
+SELECT firstname, lastname, age, post, salary, seniority
+FROM staff
+ORDER BY salary DESC
+;
 
-DROP TABLE IF EXISTS sales;
-CREATE TABLE sales (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
-    order_date DATE NOT NULL,
-    count_product INT NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE INDEX id_UNIQUE (id ASC) VISIBLE);
+SELECT firstname, lastname, age, post, salary, seniority
+FROM staff
+ORDER BY salary --ASC by default
+;
 
-INSERT INTO sales (order_date, count_product) VALUES ('2022-01-01', '156');
-INSERT INTO sales (order_date, count_product) VALUES ('2022-01-02', '180');
-INSERT INTO sales (order_date, count_product) VALUES ('2022-01-03', '21');
-INSERT INTO sales (order_date, count_product) VALUES ('2022-01-04', '124');
-INSERT INTO sales (order_date, count_product) VALUES ('2022-01-05', '341');
+-- Пункт 2.
+SELECT firstname, lastname, post, salary
+FROM staff
+ORDER BY salary DESC
+LIMIT 5
+;
 
-/* Задача 2.
-Для данных таблицы “sales” укажите тип заказа в зависимости от кол-ва:
-меньше 100 - Маленький заказ;
-от 100 до 300 - Средний заказ;
-больше 300 - Большой заказ.
-*/
+-- Пункт 3.
+SELECT post, SUM(salary)
+FROM staff
+GROUP BY post
+;
 
--- Запрос:
-USE homework2;
+-- Пункт 4.
+SELECT COUNT(id) as 'Количество рабочих от 24 до 49 лет'
+FROM staff
+WHERE post = 'Рабочий' AND age BETWEEN 24 AND 49
+;
 
-SELECT
-    id as 'ID заказа',
-    CASE
-        WHEN count_product < 100 THEN 'Маленький заказ'
-        WHEN count_product BETWEEN 100 AND 300 THEN 'Средний заказ'
-        WHEN count_product > 300 THEN 'Большой заказ'
-    END AS 'Тип заказа'
-FROM sales;
+-- Пункт 5.
+SELECT COUNT(*) as 'Количество специальностей'
+FROM
+(SELECT post
+FROM staff
+GROUP BY post) as list
+;
 
-/* Задача 3.
-Создайте таблицу “orders”, заполните ее значениями. Выберите все заказы.
-В зависимости от поля order_status выведите столбец full_order_status:
-OPEN – «Order is in open state»;
-CLOSED - «Order is closed»;
-CANCELLED - «Order is cancelled».
-*/
-
--- создаем и заполняем таблицу
-USE homework2;
-
-DROP TABLE IF EXISTS orders;
-CREATE TABLE orders (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
-    employee_id VARCHAR(40) NOT NULL,
-    amount DECIMAL(6,2) NOT NULL,
-    order_status TINYINT UNSIGNED NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE INDEX id_UNIQUE (id ASC) VISIBLE);
-
-INSERT INTO orders (employee_id, amount, order_status) VALUES ('e03', '15', '1');
-INSERT INTO orders (employee_id, amount, order_status) VALUES ('e01', '25.5', '1');
-INSERT INTO orders (employee_id, amount, order_status) VALUES ('e05', '100.7', '2');
-INSERT INTO orders (employee_id, amount, order_status) VALUES ('e02', '22.18', '1');
-INSERT INTO orders (employee_id, amount, order_status) VALUES ('e04', '9.5', '3');
-
--- Запрос:
-USE homework2;
-
-SELECT
-    id, employee_id, amount,
-    CASE order_status
-        WHEN 1 THEN 'OPEN'
-        WHEN 2 THEN 'CLOSED'
-        WHEN 3 THEN 'CANCELLED'
-    END AS 'order_status'
-FROM orders;
-
-/* Задача 4.
-Чем NULL отличается от 0?
-*/
-
--- 0 это целочисленное значение значение, хранящее в ячейке с типом INT, BIGINT и иже с ними.
--- NULL же это отсутствие значения в ячейке, т.е. либо оно не было присвоено, либо оно было сброшено.
--- Интересно было бы узнать ваше мнение по поводу того, что среди гуру СУБД бытует мнение,
--- будто бы ячейки с NULL это признак дурного дизайна модели.
--- Есть ли ситуации, когда от NULL невозможно избавиться полностью?
+-- Пункт 6.
+SELECT post--, AVG(age)
+FROM staff
+GROUP BY post
+HAVING AVG(age) < 30 -- удалить эту строку и раскоментить, чтобы убедиться воочию
+;
